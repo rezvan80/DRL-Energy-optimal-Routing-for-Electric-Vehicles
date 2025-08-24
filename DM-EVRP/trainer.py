@@ -8,7 +8,8 @@ import torch
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from utils.reinforce_baselines import ExponentialBaseline, CriticBaseline, RolloutBaseline, WarmupBaseline, StateCritic
-from utils import torch_load_cpu, move_to, plot_delivery_graph
+from utils import torch_load_cpu, move_to
+from utils.plot_delivery_graph import render
 import math
 import xlwt
 import csv
@@ -44,7 +45,7 @@ def validate(data_loader, actor, render_fn, num_nodes, charging_num, save_dir='.
         if render_fn is not None and batch_idx < num_plot:
             name = 'batch%d_%2.4f.png' % (batch_idx, reward)
             path = os.path.join(save_dir, name)
-            render_fn(static, tour_indices, path, dynamic, num_nodes, charging_num, batch_idx)
+            render_fn(static, tour_indices, path, dynamic, num_nodes, charging_num)
 
     actor.train()
     return np.mean(rewards)
