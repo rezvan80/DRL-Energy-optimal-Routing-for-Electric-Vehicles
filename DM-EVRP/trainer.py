@@ -211,15 +211,8 @@ def train_EVRP(args):
     train
     """
     from problems.EVRP import VehicleRoutingDataset
-    if args.model == "DRL":
-        from nets.DRLModel import AttentionModel
-    elif args.model == "AM":
-        from nets.AM import AttentionModel
-    elif args.model == "pointer":
-        from nets.PointNetwork import DRL4EVRP
-    else:
-        print("Please enter a correct network name")
-        sys.exit("Error message, program terminated.")
+
+    from nets.AM import AttentionModel
 
     # Determines the maximum amount of load for a vehicle based on num nodes
     MAX_DEMAND = 4
