@@ -56,7 +56,7 @@ def rollout(actor, dataset, args):
     def eval_model_bat(bat):
         # do not need backpropogation
         with torch.no_grad():
-            _, _, R, E = actor(bat)
+            _, R, E = actor(bat)
             cost = torch.sum(R, dim=1)
         return cost.data.cpu()
 
