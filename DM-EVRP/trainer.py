@@ -315,7 +315,7 @@ def train_EVRP(args):
         kwargs['lr_scheduler'] = lr_scheduler
         kwargs['train_data_out'] = train_data
         kwargs['valid_data'] = valid_data
-        kwargs['render_fn'] = plot_delivery_graph
+        kwargs['render_fn'] = render
         # train
         epoch_reward, epoch_loss= train(actor, baseline, **kwargs)
         # save data to excel
