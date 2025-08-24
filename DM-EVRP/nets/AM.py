@@ -266,7 +266,7 @@ class AttentionModel(nn.Module):
 
         minpis = pis[torch.arange(pis.size(0), out=argmincosts.new()), argmincosts]  # [batch_size,min_sequence]
 
-        return mincosts, minpis
+        return mincosts, minpis  ,distances
 
 
     def _select_node(self, probs, mask):
