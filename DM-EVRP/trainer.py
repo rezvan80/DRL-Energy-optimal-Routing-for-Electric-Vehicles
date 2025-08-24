@@ -375,7 +375,7 @@ def train_EVRP(args):
             save_dataset(thedata, filename)
         widths = args.width if args.width is not None else [0]  # list
         for width in widths:
-            mean_costs, duration = eval_dataset(test_data, width, args.softmax_temperature, args, actor, plot_delivery_graph)
+            mean_costs, duration = eval_dataset(test_data, width, args.softmax_temperature, args, actor, render)
 
 
 def eval_dataset(test_date, width, softmax_temp, args, actor, render):
