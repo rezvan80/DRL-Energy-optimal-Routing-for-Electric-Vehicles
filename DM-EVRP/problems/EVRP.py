@@ -277,4 +277,4 @@ class VehicleRoutingDataset(Dataset):
 
         new_dynamic = torch.cat((all_loads.unsqueeze(1), all_demands.unsqueeze(1), all_SOC.unsqueeze(1),all_time.unsqueeze(1)),1).to(device)
 
-        return torch.as_tensor(new_dynamic.data, device=dynamic.device), distance, soc_consume
+        return torch.as_tensor(new_dynamic.data, device=dynamic.device), soc_consume
