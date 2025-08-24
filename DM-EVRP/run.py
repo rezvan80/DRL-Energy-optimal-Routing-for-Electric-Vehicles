@@ -79,9 +79,9 @@ def main():
     if args.bl_warmup_epochs is None:
         args.bl_warmup_epochs = 1 if args.baselines == 'rollout' else 0
 
-    print('NOTE: SETTTING CHECKPOINT:')
-    args.checkpoint = os.path.join()
-    print(args.checkpoint)
+    #print('NOTE: SETTTING CHECKPOINT:')
+    #args.checkpoint = os.path.join()
+    #print(args.checkpoint)
 
     if args.test:
         if args.CVRP_lib_test:
