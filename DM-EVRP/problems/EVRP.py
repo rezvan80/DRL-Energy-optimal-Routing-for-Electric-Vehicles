@@ -68,11 +68,11 @@ class VehicleRoutingDataset(Dataset):
             depot = torch.randint(25, 75, (num_samples, 2, 1))
             depot_charging = depot
             locations = torch.randint(0, 101, (num_samples, 2, input_size))
-            locations = torch.cat((depot, depot_charging,  stations, locations),2)
+            locations = torch.cat((depot, stations, locations),2)
             demands = torch.randint(1, max_demand + 1, dynamic_shape) * 0.25
             demands = demands / float(max_load)
             demands[:, :, 0:1 + charging_num] = 0
-        self.static = locations[: , : , :26]
+        self.static = locations
         # Generation of elevation, unit m
         Elevations =torch.randint(0,101,(num_samples, input_size + 1 + charging_num),device=device)
         Elevations =( Elevations / 1000 )
