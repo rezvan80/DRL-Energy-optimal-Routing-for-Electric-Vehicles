@@ -213,7 +213,7 @@ def train_EVRP(args):
     """
     from problems.EVRP import VehicleRoutingDataset
 
-    from nets.AM import AttentionModel
+    from nets.DRLModel import AttentionModel
 
     # Determines the maximum amount of load for a vehicle based on num nodes
     MAX_DEMAND = 4
