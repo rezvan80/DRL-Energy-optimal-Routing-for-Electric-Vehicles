@@ -23,7 +23,7 @@ def render(static, tour_indices, save_path, dynamic, num_nodes, charging_num):
     idx = np.hstack((0, tour_indices[0].cpu().numpy().flatten(), 0))
     where = np.where(idx == 0)[0]
 
-    plt.rc('font', family='Times New Roman')
+    #plt.rc('font', family='Times New Roman')
 
     for j in range(len(where) - 1):
         low = where[j]
@@ -41,8 +41,8 @@ def render(static, tour_indices, save_path, dynamic, num_nodes, charging_num):
     plt.xlim(-5, 105)
     plt.ylim(-5, 105)
     plt.title(f"C{num_nodes}-S{charging_num}",size=25, weight='bold')
-    plt.yticks(fontproperties='Times New Roman', size=20)#设置大小及加粗
-    plt.xticks(fontproperties='Times New Roman', size=20)
+    #plt.yticks(fontproperties='Times New Roman', size=20)#设置大小及加粗
+    #plt.xticks(fontproperties='Times New Roman', size=20)
     # for i in range(charging_num + 1, num_nodes + charging_num + 1):
     #     plt.text((point[0, i]), point[1, i], f"{demand[i]}", size=12, color = "k",
     #             ha="center", va="center",weight = "bold")
