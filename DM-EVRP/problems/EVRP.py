@@ -122,10 +122,10 @@ class VehicleRoutingDataset(Dataset):
         time = dynamic.data[:,3]
 
         chosen_idx = chosen_idx.type(torch.long)
-
+        R=torch.zeros_like(chosen_idx, device=chosen_idx.device).unsqueeze(1)
         # If the demand is 0, return directly, and all points are blocked, marking the end of the round
         if demands.eq(0).all():
-            return demands * 0.
+            return demands * 0. , dynamic , R
 
         # Masking condition 1: Demand is greater than 0 and demand is less than load
         new_mask = demands.ne(0) * demands.lt(loads)
@@ -133,11 +133,7 @@ class VehicleRoutingDataset(Dataset):
         # Masking condition 2: The point selected at this moment will be masked at the next moment
         new_mask.scatter_(1, chosen_idx.unsqueeze(1), 0)
 
-        # Masking condition 3: Restriction of access to charging stations
-        new_mask[station_depot, 1:self.charging_num + 1] = 0
-        new_mask[charging_station, 0] = 1
-        new_mask[customer, :self.charging_num + 1] = 1
-        new_mask[depot,0]=0
+
 
         # Masking condition 4: Return directly to the warehouse if there is no quantity of goods, or the customer has no demand
         has_no_load = loads[:, 0].eq(0).float()
@@ -147,6 +143,11 @@ class VehicleRoutingDataset(Dataset):
             new_mask[combined.nonzero(as_tuple=False), 0] = 1
             new_mask[combined.nonzero(as_tuple=False), 1:] = 0
 
+        # Masking condition 3: Restriction of access to charging stations
+        new_mask[station_depot, 1:self.charging_num + 1] = 0
+        new_mask[charging_station, 0] = 1
+        new_mask[customer, :self.charging_num + 1] = 1
+        new_mask[depot,0]=0
         # Masking condition 5, the point where the next decoding power or time cannot be directly reached: ->node->node
         distance0 = distances[torch.arange(distances.size(0)), chosen_idx].clone()
         slope1 = slope[torch.arange(distances.size(0)),  chosen_idx]
@@ -216,11 +217,14 @@ class VehicleRoutingDataset(Dataset):
         new_mask[(SOC < SOC_cons0) | (time < time_cons0)] = 0
 
         new_mask[((SOC < SOC_cons3) | (time < time_cons3)) & ((SOC < SOC_cons5) | (time < time_cons5))] = 0
-
-        all_masked = new_mask[:, self.charging_num + 1:].eq(1).sum(1).le(0)
+        faild=new_mask.eq(0).all(1) & demands.gt(0).any(1) 
+        demands[faild , :]=0
+        dynamic.data[: , 1]=demands
+        R[faild , 0]=100
+        all_masked = new_mask.eq(1).sum(1).le(0)
         new_mask[all_masked, 0] = 1
 
-        return new_mask.float()
+        return new_mask.float()  , dynamic , R
 
 
     def update_dynamic(self, dynamic, distances, slope, now_idx, chosen_idx):
@@ -278,3 +282,4 @@ class VehicleRoutingDataset(Dataset):
         new_dynamic = torch.cat((all_loads.unsqueeze(1), all_demands.unsqueeze(1), all_SOC.unsqueeze(1),all_time.unsqueeze(1)),1).to(device)
 
         return torch.as_tensor(new_dynamic.data, device=dynamic.device), soc_consume
+
