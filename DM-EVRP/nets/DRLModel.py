@@ -204,7 +204,9 @@ class AttentionModel(nn.Module):
 
         batch_size, _, embed_dim = embeddings.size()
         if tour:
+            
             batch_tour = torch.stack(tour, -1)  # [batch_size, tour_len]
+            
             tour_con = torch.gather(
                 embeddings,  # [batch_size, graph_size, embed_dim]
                 1,
@@ -266,13 +268,13 @@ class AttentionModel(nn.Module):
 
             dynamic, reward = self.update_dynamic(dynamic, distances, slopes, now_idx, selected)
 
-            mask = self.update_mask(dynamic, distances, slopes, selected.data).detach()
-
+            mask , dynamic , reward2 = self.update_mask(dynamic, distances, slopes, selected.data)
+            mask=mask.detach()
             now_idx = selected
-
+            
             outputs.append(log_p[:, 0, :])
             tour_idx.append(selected)
-            R.append(reward)
+            R.append(reward + reward2)
             i += 1
 
         R = torch.cat(R, dim=1)  # (batch_size, seq_len)
