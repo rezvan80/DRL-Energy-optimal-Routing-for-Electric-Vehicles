@@ -212,7 +212,7 @@ def train_EVRP(args):
     train
     """
     from problems.EVRP import VehicleRoutingDataset
-
+    
     from nets.DRLModel import AttentionModel
 
     # Determines the maximum amount of load for a vehicle based on num nodes
@@ -338,7 +338,7 @@ def train_EVRP(args):
     else:  # test
         if args.test_file:
             print("Load test data")
-            test_data = EVRPDataset(args.test_file, num_samples=1, offset=0)
+            test_data = EVRPDataset(args.test_file, offset=0)
         else:
             print("generate test data")
             test_data = VehicleRoutingDataset(args.test_size,
@@ -378,6 +378,7 @@ def train_EVRP(args):
             mean_costs, duration = eval_dataset(test_data, width, args.softmax_temperature, args, actor, render)
 
 
+#  test function
 def eval_dataset(test_date, width, softmax_temp, args, actor, render):
     # Even with multiprocessing, we load the model here since it contains the name where to write results
     model = actor
@@ -385,11 +386,9 @@ def eval_dataset(test_date, width, softmax_temp, args, actor, render):
     results = _eval_dataset(model, dataset, width, softmax_temp, args, render)
 
     parallelism = args.eval_batch_size
-    costs, durations, energy = zip(*results)
+    costs, durations = zip(*results)
     costs = torch.cat(costs, dim=0)
-    energys = torch.cat(energy, dim=0)
     costs = costs.cpu().numpy()
-    energys = energys.cpu().numpy()
     # save to file
     if not args.CVRP_lib_test:
         now_time = '%s' % datetime.datetime.now().time()
@@ -401,12 +400,11 @@ def eval_dataset(test_date, width, softmax_temp, args, actor, render):
         with open(output_path, "a", newline='') as csvfile:
             writer = csv.writer(csvfile)
             for i in range(len(costs)):
-                writer.writerow([costs[i], durations[i], energys[i]])
+                writer.writerow([costs[i], durations[i]])
             writer.writerow("####### mean value ###########")
-            writer.writerow([np.mean(costs), np.mean(durations), np.mean(energys)])
+            writer.writerow([np.mean(costs), np.mean(durations)])
 
     print("Average cost: {} +- {}".format(np.mean(costs), 2 * np.std(costs) / np.sqrt(len(costs))))
-    print("Average energy: {} +- {}".format(np.mean(energys), 2 * np.std(energys) / np.sqrt(len(energys))))
     print("Average batch duration: {} +- {}".format(
         np.mean(durations), 2 * np.std(durations) / np.sqrt(len(durations))))
     print("Average parallel duration: {}".format(np.mean(durations) / parallelism))
@@ -442,12 +440,12 @@ def _eval_dataset(model, dataset, width, softmax_temp, args, render=None):
                     iter_rep = 1
                 assert batch_rep > 0
                 # This returns (batch_size, iter_rep shape)
-                costs, min_sequence, energy = model.sample_many(batch, batch_rep=batch_rep, iter_rep=iter_rep)
+                costs, min_sequence = model.sample_many(batch, batch_rep=batch_rep, iter_rep=iter_rep)
             else:
                 assert args.decode_strategy == 'bs'
-                costs, min_sequence, energy = model.beam_search(batch, beam_width=width)
+                costs, min_sequence = model.beam_search(batch, beam_width=width)
         duration = time.time() - start
-        results.append((costs, duration, energy))
+        results.append((costs, duration))
         if render is not None and batch_idx < args.plot_num:
             static, dynamic, _, _ = batch
             name = f'batch%d_%2.4f.png' % (batch_idx, costs[0].item())
@@ -476,4 +474,3 @@ def EVRPDataset(filename=None,  num_samples=256, offset=0):
         data = pickle.load(f)
     data = [make_instance(i) for i in data[offset:offset + num_samples]]
     return data
-
