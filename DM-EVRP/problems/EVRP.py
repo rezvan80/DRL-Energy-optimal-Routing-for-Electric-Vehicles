@@ -137,7 +137,7 @@ class VehicleRoutingDataset(Dataset):
 
         # Masking condition 4: Return directly to the warehouse if there is no quantity of goods, or the customer has no demand
         has_no_load = loads[:, 0].eq(0).float()
-        has_no_demand = demands[:, self.charging_num:].sum(1).eq(0).float()
+        has_no_demand = demands[:, self.charging_num + 1:].sum(1).eq(0).float()
         combined = (has_no_load + has_no_demand).gt(0)
         if combined.any():
             new_mask[combined.nonzero(as_tuple=False), 0] = 1
