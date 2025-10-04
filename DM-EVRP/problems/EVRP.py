@@ -102,7 +102,8 @@ class VehicleRoutingDataset(Dataset):
             return (self.static[idx], self.dynamic[idx], self.Elevation[idx])
 
 
-    def update_mask(self, dynamic, distances, slope, chosen_idx=None):
+
+    def update_mask(self, dynamic, distances, reward , slope, chosen_idx=None):
         """
         Points that cannot be visited after the point has been selected
         :param dynamic: After reaching the selection point, the updated dynamic information
@@ -122,10 +123,11 @@ class VehicleRoutingDataset(Dataset):
         time = dynamic.data[:,3]
 
         chosen_idx = chosen_idx.type(torch.long)
-        R=torch.zeros_like(chosen_idx, device=chosen_idx.device).unsqueeze(1)
+        
+                
         # If the demand is 0, return directly, and all points are blocked, marking the end of the round
         if demands.eq(0).all():
-            return demands * 0. , dynamic , R
+            return demands * 0. , dynamic , reward
 
         # Masking condition 1: Demand is greater than 0 and demand is less than load
         new_mask = demands.ne(0) * demands.lt(loads)
@@ -220,12 +222,11 @@ class VehicleRoutingDataset(Dataset):
         faild=new_mask.eq(0).all(1) & demands.gt(0).any(1) 
         demands[faild , :]=0
         dynamic.data[: , 1]=demands
-        R[faild , 0]=100
+        reward[faild , 0]=300
         all_masked = new_mask.eq(1).sum(1).le(0)
         new_mask[all_masked, 0] = 1
 
-        return new_mask.float()  , dynamic , R
-
+        return new_mask.float() , dynamic , reward
 
     def update_dynamic(self, dynamic, distances, slope, now_idx, chosen_idx):
 
@@ -282,4 +283,5 @@ class VehicleRoutingDataset(Dataset):
         new_dynamic = torch.cat((all_loads.unsqueeze(1), all_demands.unsqueeze(1), all_SOC.unsqueeze(1),all_time.unsqueeze(1)),1).to(device)
 
         return torch.as_tensor(new_dynamic.data, device=dynamic.device), soc_consume
+
 
