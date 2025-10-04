@@ -268,13 +268,13 @@ class AttentionModel(nn.Module):
 
             dynamic, reward = self.update_dynamic(dynamic, distances, slopes, now_idx, selected)
 
-            mask , dynamic , reward2 = self.update_mask(dynamic, distances, slopes, selected.data)
+            mask , dynamic , reward = self.update_mask(dynamic, distances,reward , slopes, selected.data)
             mask=mask.detach()
             now_idx = selected
             
             outputs.append(log_p[:, 0, :])
             tour_idx.append(selected)
-            R.append(reward + reward2)
+            R.append(reward)
             i += 1
 
         R = torch.cat(R, dim=1)  # (batch_size, seq_len)
@@ -312,7 +312,7 @@ class AttentionModel(nn.Module):
         mincosts, argmincosts = costs.min(-1)  # [batch]
         minpis = pis[torch.arange(pis.size(0), out=argmincosts.new()), argmincosts]
 
-        return mincosts, minpis
+        return mincosts , minpis
 
 
     def _select_node(self, probs, mask):
