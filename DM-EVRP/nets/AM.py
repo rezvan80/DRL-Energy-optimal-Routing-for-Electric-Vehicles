@@ -221,8 +221,10 @@ class AttentionModel(nn.Module):
 
             dynamic, reward = self.update_dynamic(dynamic, distances, slopes, now_idx, selected)
 
-            mask = self.update_mask(dynamic, distances, slopes, selected.data).detach()
+            mask , dynamic , reward = self.update_mask(dynamic, distances,reward , slopes, selected.data)
+            mask=mask.detach()
             now_idx = selected
+
 
             outputs.append(log_p[:, 0, :])
             tour_idx.append(selected)
