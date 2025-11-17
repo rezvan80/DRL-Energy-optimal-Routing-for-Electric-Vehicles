@@ -222,7 +222,7 @@ class VehicleRoutingDataset(Dataset):
         faild=new_mask.eq(0).all(1) & demands.gt(0).any(1) 
         demands[faild , :]=0
         dynamic.data[: , 1]=demands
-        reward[faild , 0]=300
+        reward[faild]=300
         all_masked = new_mask.eq(1).sum(1).le(0)
         new_mask[all_masked, 0] = 1
 
