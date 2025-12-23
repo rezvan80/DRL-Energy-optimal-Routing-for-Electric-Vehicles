@@ -143,7 +143,7 @@ def train(actor, baseline, optimizer, lr_scheduler, task, num_nodes, train_data_
             #bl_val = move_to(bl_val, device) if bl_val is not None else None
             
             baseline.baseline.actor.eval()
-            baseline.baseline.actor.set_decode_type("sample")
+            baseline.baseline.actor.set_decode_type("greedy")
 
             with torch.no_grad(): 
               tour_indices_old, tour_logp_old, R_old,_ , v_old , q_old= baseline.baseline.actor(batch)
@@ -159,13 +159,28 @@ def train(actor, baseline, optimizer, lr_scheduler, task, num_nodes, train_data_
             #bl_val, bl_loss = baseline.eval(x, reward) if bl_val is None else (bl_val, 0)
             #ratio = torch.exp(torch.clamp((tour_logp - tour_logp_old.detach()) , -10 , 10))
             #print("v" ,v ,"R", Return ,"S", s)
-            sim = torch.matmul(q, q_old.transpose(-2, -1)).squeeze(-2) / q_old.size(1)
-            
-            att = torch.softmax(sim, dim=-1)  
+            #sim = torch.matmul(q, q_old.transpose(-2, -1)).squeeze(-2) / q_old.size(1)
+            mask = (tour_indices != 0)
+
+            first_nonzero =  mask.size(1) - mask.int().flip(dims=[1]).argmax(dim=1)
+
+
+            last_idx = (first_nonzero )
+            #att = torch.softmax(sim, dim=-1)  
             #print(att[0])
-            ll2 = (tour_logp_old.unsqueeze(1) * att).sum(dim=-1)
+            mask = (tour_indices_old != 0)
+
+            first_nonzero =  mask.size(1) - mask.int().flip(dims=[1]).argmax(dim=1)
+
+
+            last_idx_old = (first_nonzero )
+
+            #ll2 = (tour_logp_old.unsqueeze(1) * att).sum(dim=-1)
             #print("14" , ll2.size() , tour_logp)
-            ratio = torch.exp(tour_logp - ll2.detach() )
+            last_idx=torch.tensor([math.factorial(int(i)) for i in last_idx])
+            last_idx_old=torch.tensor([math.factorial(int(i)) for i in last_idx_old])
+
+            ratio = (last_idx.to(device).detach()/last_idx_old.to(device).detach())*torch.exp(torch.sum(tour_logp , dim=1) - torch.sum(tour_logp_old , dim=1).detach() )
             #ratio = (torch.sum(tour_logp,dim=1) - torch.sum(ll2.detach() , dim=1))
             #print(v_old.shape , R_old.shape)
             #if epoch==0 :
@@ -180,6 +195,7 @@ def train(actor, baseline, optimizer, lr_scheduler, task, num_nodes, train_data_
 
             #last_idx = (first_nonzero )
             #print(mask[0] , last_idx[0])
+            
             adv = -torch.sum(R/200,dim=1).detach() - v_old.detach()
             #adv = (adv - adv.mean()) / (adv.std() + 1e-8)
             #print(ratio.shape , adv.shape)
@@ -191,7 +207,7 @@ def train(actor, baseline, optimizer, lr_scheduler, task, num_nodes, train_data_
                             1 + 0.2,
                         )
                         * adv.unsqueeze(-1)).sum(dim=1).mean()
-            #surrogate_loss = -(ratio * adv).mean()            
+            surrogate_loss = -(ratio * adv).mean()            
             value_loss = F.huber_loss(v, torch.sum(-R/200,dim=1).detach() )
             
             loss = (
